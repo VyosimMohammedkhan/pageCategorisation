@@ -13,78 +13,74 @@ let keywords={"About":['About','Company','Enterprise','Corporate','History','Val
 "Social":["Social","Facebook,", "Twitter", "Instagram", "Youtube", "LinkedIn", "RSS", "Feed", "Houzz", "Pinterest"],
 "Portal":["Portal","Login", "Sign in", "Sign up", "Cart", "Subscribe", "Log in", "Register", "Stay in touch"],
 "Legal":['Legal','Privacy', 'Terms', 'Disclaimer'],
-// "Metanames":["title.textContent", `meta[http-equiv="Content-Type"].content`, `meta[name="description"].content`, 
-// `meta[name="keywords"].content`, `meta[property="og:title"].content`,`meta[property="og:description"].content`,
-// `meta[property="og:url"].content`, `meta[property="og:site_name"].content`, `meta[property="profile:username"].content`,
-// `meta[property="profile:first_name"].content`,`meta[property="profile:last_name"].content`],
-"Language":['Language',`html.lang`, `meta[charset=""].charset`, `meta[http-equiv="Content-Language"].content`, `meta[property="og:locale"].content`],
-"Copyright":[],
 "Blog":["Articles", "Customer Stories", "Testimonials", "Reviews", "Newsletter", "Gallery", "Photo", "Guide", "Case Studies", "White Papers", "Client", "Event"],
 "Exclude":["Page Not found", "lorem ipsum", "domain for sale", "parked for free"]};
 
-async function getAllUrlsFromPage(url){
-    const browser = await puppeteer.launch({headless: false});
+async function startBrowser(){
+  const browser = await puppeteer.launch({headless: false});
+  return browser;
+}
+async function navigateToUrl(browser, url){
     const page = await browser.newPage();
     page.setDefaultNavigationTimeout(60000);
-  
-    //navigating to page
+    
     await page.goto(url,{
       "waituntil": "domcontentloaded"
     });
-    //await page.waituntil({"waituntil": "domcontentloaded"});
-    getMetaNames(page);
-    getLanguages(page);
-  //getting all urls from the page
-    const PageUrlsAndUrlTexts = await page.evaluate(() => {
-      const urlHrefAndTextArray = Array.from(document.links).map((link) => [link.href, link.text]);
-     // const urlTextArray = Array.from(document.links).map((link) => link.text);
-      const uniqueUrlArray = [...new Set(urlHrefAndTextArray)];
-      //return uniqueUrlArray;
-      return urlHrefAndTextArray;
-    });
-  
-    // PageUrlsAndUrlTexts.forEach(UrlsAndUrlText=>{
-    //   console.log(UrlsAndUrlText[1]);
-    // })
     
-    
-    await browser.close();
-    return PageUrlsAndUrlTexts;
+    return page;
   }
 
 
+async function getAllUrlsFromPage(page){
+
+    const PageUrlsAndUrlTexts = await page.evaluate(() => {
+      const urlHrefAndTextArray = Array.from(document.links).map((link) => [link.href, link.text]);
+      const uniqueUrlArray = [...new Set(urlHrefAndTextArray)];
+      return urlHrefAndTextArray;
+    })
+  return PageUrlsAndUrlTexts;
+  }
+
+async function getMetaDataLanguageAndCopyright(page){
+    let metanamesLanguage={};
+    let pagemetaNames=await getMetaNames(page);
+    let pageLanguage=await getLanguages(page);
+  
+   for(let [key, value] of Object.entries(pagemetaNames)){
+      metanamesLanguage[`${key}`]=value;
+    };
+    for(let [key, value] of Object.entries(pageLanguage)){
+      metanamesLanguage[`${key}`]=value;
+    };
+
+    console.log(metanamesLanguage);
+    //await csvWriter.writeRecords(metanamesLanguage);
+    return metanamesLanguage;
+}
+
 
 async function countMatchingKeywordsFromGivenSetOfLinks(PageUrlsAndUrlTexts){
-    //console.log(pageUrls);
-    //const browser = await puppeteer.launch({headless: false});
-    //const page = await browser.newPage();
-    //page.setDefaultNavigationTimeout(60000);
 
     let csvData=[];
     for(const UrlsAndUrlText of PageUrlsAndUrlTexts){ 
-    //console.log(`navigating to ${url}`)
-    try{
-      //await page.goto(`${url}`);
-      //let pagedata= await page.content({"waituntil": "domcontentloaded"}) 
-      //console.log(pagedata); 
-      const keywordMatchCountData=  await checkKeywordsOnUrl(`${UrlsAndUrlText}`);
-      csvData.push(keywordMatchCountData);
-    }catch(error){
-      console.log(`failed to classify ${url}`)
-      console.log(error)
-      continue;
-    }
+        try{
+          const keywordMatchCountData=  await checkKeywordsOnUrl(`${UrlsAndUrlText}`);
+          csvData.push(keywordMatchCountData);
+        }catch(error){
+          console.log(`failed to classify ${url}`)
+          console.log(error)
+          continue;
+        }
     
     }
-    // page.close();
-    // browser.close();
     return csvData;
   }
 
 
 async function checkKeywordsOnUrl(urlHrefAndTextArray){
   const urlAndTextArray = urlHrefAndTextArray.split(",");
-let Categories = {"HREF":urlAndTextArray[0], "linkText":urlAndTextArray[1],"About":'No',"Contact":'No',"Team":'No', "Investor":'No',"Product":'No', "Career":'No',"News":'No',"ECommerce":'No',"Resources":'No',"Pricing":'No',"Social":'No',"Portal":'No',"Legal":'No',"Metanames":'No',"Language": 'No',"Copyright":'No',"Blog": 'No',"Exclude": 'No'};
+let Categories = {"HREF":urlAndTextArray[0], "linkText":urlAndTextArray[1],"About":0,"Contact":0,"Team":0, "Investor":0,"Product":0, "Career":0,"News":0,"ECommerce":0,"Resources":0,"Pricing":0,"Social":0,"Portal":0,"Legal":0,"Blog": 0,"Exclude": 0};
 let keywordsArry=Object.entries(keywords);
 
 //console.log(Categories)
@@ -94,54 +90,27 @@ for(let [category,keywordset] of keywordsArry){
     let count=Categories[`${word}`];     
         for(let keyword of keywordset){
           if(Categories.HREF.toLowerCase().includes(keyword.toLowerCase())||Categories.linkText.toLowerCase().includes(keyword.toLowerCase())){
-            Categories[`${word}`]='Yes';
+            Categories[`${word}`]=1;
           }
         }
      }
-     //console.log(`The keyword match count for ${url} is as follows: \n`);
-     console.log(Categories);
- 
-    // let categoryMatchValues=Object.values(Categories);
-    // console.log(categoryMatchValues);
-    // categoryMatchValues.shift();
-    
 
-    // let maxCount=Math.max(...categoryMatchValues);
-    // console.log(maxCount);
-    // let IndexOfMaxValue=categoryMatchValues.indexOf(maxCount)
-    //  console.log("index number is "+IndexOfMaxValue);
-
-    // let urlBelongsToCategory=Object.keys(keywords)[IndexOfMaxValue];
-    // console.log("category is "+ urlBelongsToCategory)
       return Categories;
 }
 
 
+//not useful anymore
 function divideArrayIntoFiveSmallerArrays(largeArray){
-//console.log(largeArray);
 let sizeOfSmallerArrays= Math.ceil(largeArray.length/1);
-//console.log(sizeOfSmallerArrays)
 let newDividedArray=[]
 for(let i=0; i<2; i++){
   newDividedArray.push(largeArray.splice(0, sizeOfSmallerArrays));
-  //console.log(largeArray)
 }
-//console.log(newDividedArray);
 return newDividedArray;
 }
 
 
 async function getMetaNames(page){
-
-
-    // const browser = await puppeteer.launch({headless: false});
-    // const page = await browser.newPage();
-    // page.setDefaultNavigationTimeout(60000);
-  
-    // //navigating to page
-    // await page.goto("http://naukri.com",{
-    //   "waituntil": "domcontentloaded"
-    // });
 
 let getMetaData=await page.evaluate(()=>{
   let metaDataMap=new Map();
@@ -181,20 +150,10 @@ let getMetaData=await page.evaluate(()=>{
 
 return metaDataMap;
 })
-
-console.log(getMetaData);
-//browser.close();
+return getMetaData;
 }
 
 async function getLanguages(page){
-  // const browser = await puppeteer.launch({headless: false});
-  // const page = await browser.newPage();
-  // page.setDefaultNavigationTimeout(60000);
-
-  // //navigating to page
-  // await page.goto("http://naukri.com",{
-  //   "waituntil": "domcontentloaded"
-  // });
 
   let getLanguagesData=await page.evaluate(()=>{
     let languageDataMap=new Map();
@@ -213,10 +172,25 @@ async function getLanguages(page){
 
   return languageDataMap;
   })
-  
-  console.log(getLanguagesData);
- // browser.close();
+  return getLanguagesData;
   }
 
 
-  module.exports={getAllUrlsFromPage,countMatchingKeywordsFromGivenSetOfLinks,divideArrayIntoFiveSmallerArrays,getMetaNames,getLanguages}
+  async function getCopyrightText() {
+    const browser = await puppeteer.launch({headless: false});
+    const page = await browser.newPage();
+    
+    await page.goto('https://naukri.com',{
+      "waituntil": "domcontentloaded"
+    });
+    
+    const element = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll('*[innertext=""]')).find(element => element.textContent.toLowerCase().includes('all rights reserved'));
+    });  
+    console.log(element);
+    await browser.close();
+  }
+
+
+
+  module.exports={getAllUrlsFromPage,countMatchingKeywordsFromGivenSetOfLinks,divideArrayIntoFiveSmallerArrays,getMetaNames,getLanguages, getCopyrightText}
