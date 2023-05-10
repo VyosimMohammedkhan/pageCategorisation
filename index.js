@@ -1,5 +1,5 @@
 //const puppeteer = require('puppeteer');
-const {getAllUrlsFromPage,countMatchingKeywordsFromGivenSetOfLinks,divideArrayIntoFiveSmallerArrays}=require('./helper_function')
+const {getAllUrlsFromPage,countMatchingKeywordsFromGivenSetOfLinks,divideArrayIntoFiveSmallerArrays,getMetaNames, getLanguages}=require('./helper_function')
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const fs=require('fs');
 const stringify=require('csv-stringify')
@@ -80,4 +80,5 @@ urlArray.forEach(async url => {
 
 
 main()
-
+//getMetaNames()
+//getLanguages();

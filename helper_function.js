@@ -13,10 +13,10 @@ let keywords={"About":['About','Company','Enterprise','Corporate','History','Val
 "Social":["Social","Facebook,", "Twitter", "Instagram", "Youtube", "LinkedIn", "RSS", "Feed", "Houzz", "Pinterest"],
 "Portal":["Portal","Login", "Sign in", "Sign up", "Cart", "Subscribe", "Log in", "Register", "Stay in touch"],
 "Legal":['Legal','Privacy', 'Terms', 'Disclaimer'],
-"Metanames":["title.textContent", `meta[http-equiv="Content-Type"].content`, `meta[name="description"].content`, 
-`meta[name="keywords"].content`, `meta[property="og:title"].content`,`meta[property="og:description"].content`,
-`meta[property="og:url"].content`, `meta[property="og:site_name"].content`, `meta[property="profile:username"].content`,
-`meta[property="profile:first_name"].content`,`meta[property="profile:last_name"].content`],
+// "Metanames":["title.textContent", `meta[http-equiv="Content-Type"].content`, `meta[name="description"].content`, 
+// `meta[name="keywords"].content`, `meta[property="og:title"].content`,`meta[property="og:description"].content`,
+// `meta[property="og:url"].content`, `meta[property="og:site_name"].content`, `meta[property="profile:username"].content`,
+// `meta[property="profile:first_name"].content`,`meta[property="profile:last_name"].content`],
 "Language":['Language',`html.lang`, `meta[charset=""].charset`, `meta[http-equiv="Content-Language"].content`, `meta[property="og:locale"].content`],
 "Copyright":[],
 "Blog":["Articles", "Customer Stories", "Testimonials", "Reviews", "Newsletter", "Gallery", "Photo", "Guide", "Case Studies", "White Papers", "Client", "Event"],
@@ -32,7 +32,8 @@ async function getAllUrlsFromPage(url){
       "waituntil": "domcontentloaded"
     });
     //await page.waituntil({"waituntil": "domcontentloaded"});
-  
+    getMetaNames(page);
+    getLanguages(page);
   //getting all urls from the page
     const PageUrlsAndUrlTexts = await page.evaluate(() => {
       const urlHrefAndTextArray = Array.from(document.links).map((link) => [link.href, link.text]);
@@ -130,6 +131,92 @@ return newDividedArray;
 }
 
 
+async function getMetaNames(page){
 
 
-  module.exports={getAllUrlsFromPage,countMatchingKeywordsFromGivenSetOfLinks,divideArrayIntoFiveSmallerArrays}
+    // const browser = await puppeteer.launch({headless: false});
+    // const page = await browser.newPage();
+    // page.setDefaultNavigationTimeout(60000);
+  
+    // //navigating to page
+    // await page.goto("http://naukri.com",{
+    //   "waituntil": "domcontentloaded"
+    // });
+
+let getMetaData=await page.evaluate(()=>{
+  let metaDataMap=new Map();
+
+  let titleContent=document.title;
+  metaDataMap.metaTitleContent=titleContent?titleContent:null;
+
+   let httpContenType=document.querySelector('meta[http-equiv="Content-Type"]')
+   metaDataMap.metaContenType=httpContenType?httpContenType.getAttribute('content'):null;
+
+   let keywords= document.querySelector('meta[name="keywords"]')
+   metaDataMap.metaKeywords=keywords?keywords.getAttribute('content'):null;
+
+   let desc= document.querySelector('meta[name="description"]')
+   metaDataMap.metaDescription=desc?desc.getAttribute('content'):null;
+
+   let ogTitle= document.querySelector('meta[property="og:title"]')
+   metaDataMap.metaOgTitle=ogTitle?ogTitle.getAttribute('content'):null;
+   
+   let ogDescription=document.querySelector('meta[property="og:description"]')
+   metaDataMap.metaOgDescription=ogDescription?ogDescription.getAttribute('content'):null;
+   
+   let ogUrl= document.querySelector('meta[property="og:url"]')
+   metaDataMap.metaOgUrl=ogUrl?ogUrl.getAttribute('content'):null;
+   
+   let ogSitename=document.querySelector('meta[property="og:site_name"]')
+   metaDataMap.metaOgSitename=ogSitename?ogSitename.getAttribute('content'):null;
+   
+   let profileUsername=document.querySelector('meta[property="profile:username"]')
+   metaDataMap.metaProfileUsername=profileUsername?profileUsername.getAttribute('content'):null;
+   
+   let profileFirstname=document.querySelector('meta[property="profile:first_name"]')
+   metaDataMap.metaProfileFirstname=profileFirstname?profileFirstname.getAttribute('content'):null;
+   
+   let profileLastname= document.querySelector('meta[property="profile:last_name"]')
+   metaDataMap.metaprofileLastname=profileLastname?profileLastname.getAttribute('content'):null;   
+
+return metaDataMap;
+})
+
+console.log(getMetaData);
+//browser.close();
+}
+
+async function getLanguages(page){
+  // const browser = await puppeteer.launch({headless: false});
+  // const page = await browser.newPage();
+  // page.setDefaultNavigationTimeout(60000);
+
+  // //navigating to page
+  // await page.goto("http://naukri.com",{
+  //   "waituntil": "domcontentloaded"
+  // });
+
+  let getLanguagesData=await page.evaluate(()=>{
+    let languageDataMap=new Map();
+  
+     let charSet=document.querySelector('meta[charset=""]')
+     languageDataMap.languageCharSet=charSet?charSet.getAttribute('charset'):null;
+  
+     let contentLanguage= document.querySelector('meta[http-equiv="Content-Language"]')
+     languageDataMap.contentLanguage=contentLanguage?contentLanguage.getAttribute('content'):null;
+
+     let languageLocale= document.querySelector('meta[property="og:locale"]')
+     languageDataMap.languageLocale=languageLocale?languageLocale.getAttribute('content'):null;
+  
+     let htmlLang= document.querySelector('html')
+     languageDataMap.languageHtmtlLang=htmlLang?htmlLang.getAttribute('lang'):null;
+
+  return languageDataMap;
+  })
+  
+  console.log(getLanguagesData);
+ // browser.close();
+  }
+
+
+  module.exports={getAllUrlsFromPage,countMatchingKeywordsFromGivenSetOfLinks,divideArrayIntoFiveSmallerArrays,getMetaNames,getLanguages}
