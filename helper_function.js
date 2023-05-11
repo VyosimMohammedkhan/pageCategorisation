@@ -20,6 +20,8 @@ async function startBrowser(){
   const browser = await puppeteer.launch({headless: false});
   return browser;
 }
+
+
 async function navigateToUrl(browser, url){
     const page = await browser.newPage();
     page.setDefaultNavigationTimeout(60000);
@@ -30,7 +32,9 @@ async function navigateToUrl(browser, url){
     
     return page;
   }
-
+async function closeBrowser(browser){
+  await browser.close();
+}
 
 async function getAllUrlsFromPage(page){
 
@@ -53,8 +57,6 @@ async function getMetaDataLanguageAndCopyright(page){
     for(let [key, value] of Object.entries(pageLanguage)){
       metanamesLanguage[`${key}`]=value;
     };
-
-    console.log(metanamesLanguage);
     //await csvWriter.writeRecords(metanamesLanguage);
     return metanamesLanguage;
 }
@@ -72,7 +74,6 @@ async function countMatchingKeywordsFromGivenSetOfLinks(PageUrlsAndUrlTexts){
           console.log(error)
           continue;
         }
-    
     }
     return csvData;
   }
@@ -83,18 +84,15 @@ async function checkKeywordsOnUrl(urlHrefAndTextArray){
 let Categories = {"HREF":urlAndTextArray[0], "linkText":urlAndTextArray[1],"About":0,"Contact":0,"Team":0, "Investor":0,"Product":0, "Career":0,"News":0,"ECommerce":0,"Resources":0,"Pricing":0,"Social":0,"Portal":0,"Legal":0,"Blog": 0,"Exclude": 0};
 let keywordsArry=Object.entries(keywords);
 
-//console.log(Categories)
-
 for(let [category,keywordset] of keywordsArry){
     const word =category.toString()
-    let count=Categories[`${word}`];     
+   // let count=Categories[`${word}`];     
         for(let keyword of keywordset){
           if(Categories.HREF.toLowerCase().includes(keyword.toLowerCase())||Categories.linkText.toLowerCase().includes(keyword.toLowerCase())){
             Categories[`${word}`]=1;
           }
         }
      }
-
       return Categories;
 }
 
@@ -193,4 +191,4 @@ async function getLanguages(page){
 
 
 
-  module.exports={getAllUrlsFromPage,countMatchingKeywordsFromGivenSetOfLinks,divideArrayIntoFiveSmallerArrays,getMetaNames,getLanguages, getCopyrightText}
+  module.exports={getMetaDataLanguageAndCopyright,closeBrowser,startBrowser,navigateToUrl,getAllUrlsFromPage,countMatchingKeywordsFromGivenSetOfLinks,divideArrayIntoFiveSmallerArrays,getMetaNames,getLanguages, getCopyrightText}

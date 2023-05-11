@@ -1,11 +1,14 @@
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const path=require('path');
 
-function createCsvFileForMetaData(){
+function createCsvFileForMetaData(url){
+     let filepath;
+     if(`${url}`.includes('https')){filepath=`${url}`.replace('https://','');}else{filepath=`${url}`.replace('http://','');};
+          
+
     const csvWriter = createCsvWriter({
-         path: path.resolve(__dirname, "metaNamesLanguages.csv"),
+         path: path.resolve(__dirname, `${filepath}MetaData.csv`),
          header: [
-         {id: 'SiteID', title:'SiteID'},
            {id: 'metaTitleContent', title:'metaTitleContent'},
            {id: 'metaContenType', title:'metaContenType'},
            {id: 'metaKeywords', title:'metaKeywords'},

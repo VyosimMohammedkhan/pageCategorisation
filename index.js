@@ -1,5 +1,5 @@
 //const puppeteer = require('puppeteer');
-const {getAllUrlsFromPage,countMatchingKeywordsFromGivenSetOfLinks,divideArrayIntoFiveSmallerArrays,getMetaNames, getLanguages, getCopyrightText}=require('./helper_function')
+const {startBrowser,navigateToUrl,closeBrowser,getAllUrlsFromPage,getMetaDataLanguageAndCopyright,countMatchingKeywordsFromGivenSetOfLinks,divideArrayIntoFiveSmallerArrays,getMetaNames,getLanguages, getCopyrightText}=require('./helper_function')
 const {createCsvFileForCategories, createCsvFileForMetaData}= require('./csv_functions')
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const fs=require('fs');
@@ -10,23 +10,27 @@ const fs=require('fs');
 urlArray=["http://www.allaccessequipment.com", "https://www.gn.com", "https://www.adecco.co.uk"];
 
 
+
 async function main(){
-     urlArray.forEach(async url => {
+     
+     await urlArray.forEach(async url => {
 
           let categoryCsvWriter=  createCsvFileForCategories(url);
-          let metaDataCsvWriter=  createCsvFileForMetaData();
-
+          let metaDataCsvWriter=  createCsvFileForMetaData(url);
           try{
-               const page=await navigateToUrl(url)
-               const data=await getAllUrlsFromPage(page)
+               const browser= await startBrowser();
+               const page=await navigateToUrl(browser, url);
+               const data=await getAllUrlsFromPage(page);
+               const metaDataLangCopyright=await getMetaDataLanguageAndCopyright(page);
                const categoryCsvData= await countMatchingKeywordsFromGivenSetOfLinks(data);
                await categoryCsvWriter.writeRecords(categoryCsvData);
+               await metaDataCsvWriter.writeRecords([metaDataLangCopyright]);
+               await closeBrowser(browser);
           }
           catch(err){
-               console.log(err)
-               await categoryCsvWriter.writeRecords(err);
+               console.log(err);
           }
      });
 };
 
-main()
+main();
