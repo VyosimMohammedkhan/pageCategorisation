@@ -59,7 +59,8 @@ async function getMetaDataLanguageAndCopyright(page) {
   for (let [key, value] of Object.entries(pageLanguage)) {
     metanamesLanguage[`${key}`] = value;
   };
-  //await csvWriter.writeRecords(metanamesLanguage);
+  metanamesLanguage.copyright=await getCopyrightText(page);
+  
   return metanamesLanguage;
 }
 
@@ -176,19 +177,16 @@ async function getLanguages(page) {
 }
 
 
-async function getCopyrightText() {
-  const browser = await puppeteer.launch({ headless: false });
-  const page = await browser.newPage();
+async function getCopyrightText(page) {
 
-  await page.goto('https://naukri.com', {
-    "waituntil": "domcontentloaded"
-  });
+  const elementsWithSymbol = await page.$x("//*[contains(text(), '©')]");
+  if (elementsWithSymbol.length > 0) {
+    const textContent = await page.evaluate(element => element.textContent, elementsWithSymbol[0]);
+    return textContent.replace(/\r?\n|\r/g, "");
+  } else {
+    return "NOT FOUND!";
+  }
 
-  const element = await page.evaluate(() => {
-    return Array.from(document.querySelectorAll('*[innertext=""]')).find(element => element.textContent.toLowerCase().includes('all rights reserved'));
-  });
-  console.log(element);
-  await browser.close();
 }
 
 

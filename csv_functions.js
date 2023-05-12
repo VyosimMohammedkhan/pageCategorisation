@@ -1,13 +1,13 @@
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const path = require('path');
 
-function createCsvFileForMetaData(url) {
-     let filepath;
-     if (`${url}`.includes('https')) { filepath = `${url}`.replace('https://', ''); } else { filepath = `${url}`.replace('http://', ''); };
+function createCsvFileForMetaData() {
+     // let filepath;
+     // if (`${url}`.includes('https')) { filepath = `${url}`.replace('https://', ''); } else { filepath = `${url}`.replace('http://', ''); };
 
 
      const csvWriter = createCsvWriter({
-          path: path.resolve(__dirname, `${filepath}MetaData.csv`),
+          path: path.resolve(__dirname, `MetaData.csv`),
           header: [
                { id: 'metaTitleContent', title: 'metaTitleContent' },
                { id: 'metaContenType', title: 'metaContenType' },
@@ -24,6 +24,7 @@ function createCsvFileForMetaData(url) {
                { id: 'contentLanguage', title: 'contentLanguage' },
                { id: 'languageLocale', title: 'languageLocale' },
                { id: 'languageHtmtlLang', title: 'languageHtmtlLang' },
+               { id: 'copyright', title: 'copyright' }
           ]
      });
 
